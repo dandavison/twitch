@@ -1,0 +1,60 @@
+#!/usr/bin/env nu
+
+let OUTPUT_DIR = '/tmp/projects-tests'
+let STDOUT_FILE = $'($OUTPUT_DIR)/stdout.txt'
+let STDERR_FILE = $'($OUTPUT_DIR)/stderr.txt'
+
+# TODO: It would be nice to keep all the output and error capturing in ths file. However, when there
+# is an error in tests.nu, the following hangs:
+# tmux new-session $'do -c { nu tests.nu | save ($STDOUT_FILE) } | to text | save ($STDERR_FILE)'
+
+setup
+tmux new-session -d nu tests.nu $STDOUT_FILE $STDERR_FILE
+wait-until { ($STDOUT_FILE | path exists) ||($STDERR_FILE | path exists) }
+report
+teardown
+
+
+def wait-until [cond: block, retry_interval: duration = 500ms, timeout: duration = 10sec, waited: duration = 0ms] {
+    if not (do $cond) {
+        sleep $retry_interval
+        let waited = $waited + $retry_interval
+        if $waited > $timeout {
+            false
+        } else {
+            wait-until $cond $retry_interval $timeout $waited
+        }
+    }
+}
+
+def report [] {
+    if ($STDOUT_FILE | path exists) {
+        cat $STDOUT_FILE
+    } else {
+        echo 'Warning: stdout file was not created'
+    }
+    if ($STDERR_FILE | path exists) {
+        echo "\n-------------------------------------------------------------------------------------"
+        cat $STDERR_FILE
+    }
+}
+
+def setup [] {
+    mkdir $OUTPUT_DIR
+    rm -f $STDOUT_FILE
+    rm -f $STDERR_FILE
+    activate-test-projects
+}
+
+def teardown [] {
+    activate-real-projects
+}
+
+def activate-test-projects [] {
+    ^ln -sf ~/.projects-tests.yml ~/.projects.yml
+}
+
+def activate-real-projects [] {
+    ^ln -sf ~/.projects-real.yml ~/.projects.yml
+}
+
