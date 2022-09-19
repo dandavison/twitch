@@ -2,7 +2,7 @@
 
 export def PROJECTS-FILE [] { '~/.pm.yml' }
 
-export def PROJECTS [] { PROJECTS-FILE | path expand | open }
+export def PROJECTS [] { PROJECTS-FILE | path expand | open | sort }
 
 # Open a file or directory in VSCode.
 # With no input, select a project file.
