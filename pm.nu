@@ -9,7 +9,7 @@ export def PROJECTS [] { PROJECTS-FILE | path expand | open | sort }
 
 # Open a file or directory in VSCode.
 # With no input, select a project file.
-export def edit [path?: string] { # -> Void
+export def edit [path?: string --zed] { # -> Void
   let path = (if $path == null {
       (PROJECTS | get (pm select)).dir
     } else {
@@ -17,14 +17,18 @@ export def edit [path?: string] { # -> Void
     }
   )
   if (not ($path | is-empty)) {
-    ^code $path
+    if $zed {
+        ^zed $path
+    } else {
+        ^code $path
+    }
   }
 }
 
 alias vscode = edit
 
 export def 'pm edit-projects' [] { # -> Void
-    edit (PROJECTS-FILE)
+    edit --zed (PROJECTS-FILE)
 }
 
 export def 'pm list' [] { # -> List<String>
