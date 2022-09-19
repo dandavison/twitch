@@ -1,6 +1,6 @@
 # type Window = {id: Int, name: String}
 
-export def PROJECTS-FILE [] { '~/.projects.yml' }
+export def PROJECTS-FILE [] { '~/.pm.yml' }
 
 export def PROJECTS [] { PROJECTS-FILE | path expand | open }
 
@@ -8,7 +8,7 @@ export def PROJECTS [] { PROJECTS-FILE | path expand | open }
 # With no input, select a project file.
 export def edit [path?: string] { # -> Void
   let path = (if $path == null {
-      (PROJECTS | get (p select)).dir
+      (PROJECTS | get (pm select)).dir
     } else {
       $path
     }
@@ -20,42 +20,42 @@ export def edit [path?: string] { # -> Void
 
 alias vscode = edit
 
-export def 'p edit-projects' [] { # -> Void
+export def 'pm edit-projects' [] { # -> Void
     edit (PROJECTS-FILE)
 }
 
-export def 'p list' [] { # -> List<String>
+export def 'pm list' [] { # -> List<String>
     PROJECTS | transpose name | get name
 }
 
-export def 'p select' [] { # -> String
-    p list | fzf-cmd
+export def 'pm select' [] { # -> String
+    pm list | fzf-cmd
 }
 
-export def-env 'p switch' [name?: string] { # -> Void
+export def-env 'pm switch' [name?: string] { # -> Void
     let name = if ($name | is-empty) {
-        p select
+        pm select
     } else {
         $name
     }
     term switch $name (PROJECTS | get $name).dir
 }
 
-export def 'p toggle-symlink' [] {
+export def 'pm toggle-symlink' [] {
     let current_target = (
-        ls -ld '~/.projects*'
-            | where name =~ '.+/\.projects.yml'
+        ls -ld '~/.pm*'
+            | where name =~ '.+/\.pm.yml'
             | get target
             | path basename
     ).0
-    if $current_target == '.projects-real.yml' {
-        ^ln -sf ~/.projects-tests.yml ~/.projects.yml
-    } else if $current_target == '.projects-tests.yml' {
-        ^ln -sf ~/.projects-real.yml ~/.projects.yml
+    if $current_target == '.pm-real.yml' {
+        ^ln -sf ~/.pm-tests.yml ~/.pm.yml
+    } else if $current_target == '.pm-tests.yml' {
+        ^ln -sf ~/.pm-real.yml ~/.pm.yml
     } else {
         error make {msg: 'Unexpected symlink target: ($current_target)'}
     }
-    ls -ld ~/.projects* | where name =~ '.+/\.projects.yml' | select name target
+    ls -ld ~/.pm* | where name =~ '.+/\.pm.yml' | select name target
 }
 
 export def-env 'term switch' [name: string, dir: string] { # -> Void
