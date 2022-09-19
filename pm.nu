@@ -28,7 +28,7 @@ export def 'pm list' [] { # -> List<String>
     PROJECTS | transpose name | get name
 }
 
-export def 'pm select' [] { # -> String
+export def 'pm select' [] { # -> Option<String>
     pm list | fzf-cmd
 }
 
@@ -38,7 +38,9 @@ export def-env 'pm switch' [name?: string] { # -> Void
     } else {
         $name
     }
-    term switch $name (PROJECTS | get $name).dir
+    if not ($name | is-empty) {
+        term switch $name (PROJECTS | get $name).dir
+    }
 }
 
 export def 'pm toggle-symlink' [] {
