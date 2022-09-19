@@ -48,7 +48,12 @@ export def-env 'pm switch' [name?: string] { # -> Void
     }
     if not ($name | is-empty) {
         debug $'pm switch: got ($name)'
-        term switch $name (PROJECTS | get $name).dir
+        let dir = ((PROJECTS | get $name).dir | path expand)
+        if not ($dir | path exists) {
+            debug $'pm switch: creating dir: ($dir)'
+            mkdir $dir
+        }
+        term switch $name $dir
     }
 }
 
@@ -71,6 +76,7 @@ export def 'pm toggle-symlink' [] {
 
 export def-env 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
+    debug $'term switch: ($name) ($dir)'
     if ($window | is-empty) {
         debug $'term switch: to new window ($name)'
         tmux new-window -n $name -c $dir
