@@ -1,6 +1,9 @@
 # type Window = {id: Int, name: String}
 
 export def PROJECTS-FILE [] { '~/.pm.yml' }
+def LOG-FILE [] { '/tmp/pm.log' }
+def DEBUG [] { true }
+
 
 export def PROJECTS [] { PROJECTS-FILE | path expand | open | sort }
 
@@ -44,6 +47,7 @@ export def-env 'pm switch' [name?: string] { # -> Void
         $name
     }
     if not ($name | is-empty) {
+        debug $'pm switch: got ($name)'
         term switch $name (PROJECTS | get $name).dir
     }
 }
@@ -68,8 +72,10 @@ export def 'pm toggle-symlink' [] {
 export def-env 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
     if ($window | is-empty) {
+        debug $'term switch: to new window ($name)'
         tmux new-window -n $name -c $dir
     } else {
+        debug $'term switch: to existing window ($name)'
         tmux select-window -t $window.id
     }
     cd $dir
@@ -83,7 +89,7 @@ export def 'term clean' [] { # -> Void
     term list | get name | uniq -d | par-each { |window|
         let active = (tmux display-message -p '#I')
         term list | where name == $window | where id != $active | skip 1 | get id | par-each { |id|
-            print $'tmux kill-window -t ($id)'
+            debug $'tmux kill-window -t ($id)'
             tmux kill-window -t $id
         }
     }
@@ -111,4 +117,13 @@ export def tmux-list-windows [] {  # -> List<Window>
     tmux list-windows -F '#I #W'
         | lines
         | split column ' ' id name
+}
+
+
+def debug [msg: string] {
+    if DEBUG {
+        let msg = $"($msg)\n"
+        print $msg
+        $msg | save --append (LOG-FILE)
+    }
 }
