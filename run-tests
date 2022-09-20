@@ -15,14 +15,13 @@ report
 teardown
 
 
-def wait-until [cond: block, retry_interval: duration = 500ms, timeout: duration = 10sec, waited: duration = 0ms] {
+def wait-until [cond: block, retry_interval: duration = 500ms, timeout: duration = 3sec] {
     if not (do $cond) {
         sleep $retry_interval
-        let waited = $waited + $retry_interval
-        if $waited > $timeout {
+        if $timeout <= 0sec {
             false
         } else {
-            wait-until $cond $retry_interval $timeout $waited
+            wait-until $cond $retry_interval ($timeout - $retry_interval)
         }
     }
 }
