@@ -80,12 +80,14 @@ export def 'pm toggle-symlink' [] {
 
 export def-env 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
+    let overlay_use_cmd = $'overlay use .pm.nu as ($name)'
     debug $'term switch: ($name) ($dir)'
     if ($window | is-empty) {
         debug $'term switch: to new window ($name)'
-        tmux new-window -n $name -c $dir
+        tmux new-window -n $name -c $dir $"nu --execute '($overlay_use_cmd)'"
     } else {
         debug $'term switch: to existing window ($name)'
+        tmux send-keys -t $name $overlay_use_cmd 'Enter'
         tmux select-window -t $window.id
     }
 }
