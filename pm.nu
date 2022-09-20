@@ -88,7 +88,6 @@ export def-env 'term switch' [name: string, dir: string] { # -> Void
         debug $'term switch: to existing window ($name)'
         tmux select-window -t $window.id
     }
-    cd $dir
 }
 
 export def 'term list' [] { # -> List<Window>
@@ -96,8 +95,8 @@ export def 'term list' [] { # -> List<Window>
 }
 
 export def 'term clean' [] { # -> Void
+    let active = (tmux display-message -p '#I')
     term list | get name | uniq -d | par-each { |window|
-        let active = (tmux display-message -p '#I')
         term list | where name == $window | where id != $active | skip 1 | get id | par-each { |id|
             debug $'tmux kill-window -t ($id)'
             tmux kill-window -t $id
