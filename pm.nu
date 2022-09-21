@@ -40,7 +40,7 @@ export def 'pm list' [] { # -> List<String>
 export def 'pm select' [] { # -> Option<String>
     pm list
         | str collect "\n"
-        | ^fzf --height=10 --info=hidden --border=rounded --layout=reverse
+        | ^fzf --height='50%' --info=hidden --border=rounded --layout=reverse
         | str trim -r
 }
 
