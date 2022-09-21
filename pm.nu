@@ -27,6 +27,10 @@ export def 'pm edit-projects' [] { # -> Void
     edit --zed (PROJECTS-FILE)
 }
 
+export def-env 'pm cd' [] {
+    cd (pm read-projects | pm get (term current)).dir
+}
+
 export def 'pm list' [] { # -> List<String>
     pm read-projects | get name
 }
