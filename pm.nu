@@ -1,10 +1,8 @@
 # type Window = {id: Int, name: String}
 
-export def PROJECTS-FILE [] { '~/.pm.yml' }
+export def PROJECTS-FILE [] { '~/.pm.json' | path expand }
 def LOG-FILE [] { '/tmp/pm.log' }
 def DEBUG [] { true }
-
-export def PROJECTS [] { PROJECTS-FILE | path expand | open | sort }
 
 export def-env 'pm switch' [name?: string] { # -> Void
     let name = if ($name | is-empty) {
@@ -14,7 +12,9 @@ export def-env 'pm switch' [name?: string] { # -> Void
     }
     if not ($name | is-empty) {
         debug $'pm switch: got ($name)'
-        let dir = ((PROJECTS | get $name).dir | path expand)
+        let projects = (pm read-projects | pm bubble-up $name)
+        $projects | pm write-projects
+        let dir = (($projects | pm get $name).dir | path expand)
         if not ($dir | path exists) {
             debug $'pm switch: creating dir: ($dir)'
             mkdir $dir
@@ -28,7 +28,7 @@ export def 'pm edit-projects' [] { # -> Void
 }
 
 export def 'pm list' [] { # -> List<String>
-    PROJECTS | transpose name | get name
+    pm read-projects | get name
 }
 
 export def 'term clean' [] { # -> Void
@@ -45,7 +45,7 @@ export def 'term clean' [] { # -> Void
 # With no input, select a project file.
 export def edit [path?: string --zed] { # -> Void
   let path = (if $path == null {
-      (PROJECTS | get (pm select)).dir
+      (pm read-projects | pm get (pm select)).dir
     } else {
       $path
     }
@@ -67,11 +67,25 @@ alias vscode = edit
 
 # let-env FZF_DEFAULT_OPTS = '--color=fg:#d0d0d0,bg:#121212,hl:#5f87af --color=fg+:#d0d0d0,bg+:#262626,hl+:#5fd7ff --color=info:#afaf87,prompt:#d7005f,pointer:#af5fff --color=marker:#87ff00,spinner:#af5fff,header:#87afaf'
 
+export def 'pm read-projects' [] { PROJECTS-FILE | path expand | open }
+
+export def 'pm write-projects' [] { $in | to json | save --raw (PROJECTS-FILE) }
+
+export def 'pm bubble-up' [name: string] {
+    let projects = $in
+    (($projects | where name != $name) | prepend ($projects | pm get $name))
+}
+
 def 'pm select' [] { # -> Option<String>
-    pm list
+    let current = (term current)
+    pm list | where $it != $current
         | str collect "\n"
         | ^fzf --height='50%' --info=hidden --border=rounded --layout=reverse
         | str trim -r
+}
+
+export def 'pm get' [name: string] {
+    $in | where name == $name | unwrap-only
 }
 
 def 'pm toggle-symlink' [] {
@@ -91,7 +105,7 @@ def 'pm toggle-symlink' [] {
     ls -ld ~/.pm* | where name =~ '.+/\.pm.yml' | select name target
 }
 
-def-env 'term switch' [name: string, dir: string] { # -> Void
+def 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
     let overlay_use_cmd = $'overlay use .pm.nu as ($name)'
     debug $'term switch: ($name) ($dir)'
@@ -105,7 +119,14 @@ def-env 'term switch' [name: string, dir: string] { # -> Void
     }
 }
 
-def 'term list' [] { # -> List<Window>
+export def 'term current' [] { # -> Window
+    let id = (tmux display-message -p '#I' | str trim -r)
+    term list | where id == $id
+              | unwrap-only
+              | get name
+}
+
+export def 'term list' [] { # -> List<Window>
     tmux-list-windows
 }
 
