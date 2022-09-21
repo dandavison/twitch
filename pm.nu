@@ -4,8 +4,42 @@ export def PROJECTS-FILE [] { '~/.pm.yml' }
 def LOG-FILE [] { '/tmp/pm.log' }
 def DEBUG [] { true }
 
-
 export def PROJECTS [] { PROJECTS-FILE | path expand | open | sort }
+
+export def-env 'pm switch' [name?: string] { # -> Void
+    let name = if ($name | is-empty) {
+        pm select
+    } else {
+        $name
+    }
+    if not ($name | is-empty) {
+        debug $'pm switch: got ($name)'
+        let dir = ((PROJECTS | get $name).dir | path expand)
+        if not ($dir | path exists) {
+            debug $'pm switch: creating dir: ($dir)'
+            mkdir $dir
+        }
+        term switch $name $dir
+    }
+}
+
+export def 'pm edit-projects' [] { # -> Void
+    edit --zed (PROJECTS-FILE)
+}
+
+export def 'pm list' [] { # -> List<String>
+    PROJECTS | transpose name | get name
+}
+
+export def 'term clean' [] { # -> Void
+    let active = (tmux display-message -p '#I')
+    term list | get name | uniq -d | par-each { |window|
+        term list | where name == $window | where id != $active | skip 1 | get id | par-each { |id|
+            debug $'tmux kill-window -t ($id)'
+            tmux kill-window -t $id
+        }
+    }
+}
 
 # Open a file or directory in VSCode.
 # With no input, select a project file.
@@ -27,41 +61,20 @@ export def edit [path?: string --zed] { # -> Void
 
 alias vscode = edit
 
-export def 'pm edit-projects' [] { # -> Void
-    edit --zed (PROJECTS-FILE)
-}
-
-export def 'pm list' [] { # -> List<String>
-    PROJECTS | transpose name | get name
-}
+# -------------------------------------------------------------------------------------
+#
+# Private
 
 # let-env FZF_DEFAULT_OPTS = '--color=fg:#d0d0d0,bg:#121212,hl:#5f87af --color=fg+:#d0d0d0,bg+:#262626,hl+:#5fd7ff --color=info:#afaf87,prompt:#d7005f,pointer:#af5fff --color=marker:#87ff00,spinner:#af5fff,header:#87afaf'
 
-export def 'pm select' [] { # -> Option<String>
+def 'pm select' [] { # -> Option<String>
     pm list
         | str collect "\n"
         | ^fzf --height='50%' --info=hidden --border=rounded --layout=reverse
         | str trim -r
 }
 
-export def-env 'pm switch' [name?: string] { # -> Void
-    let name = if ($name | is-empty) {
-        pm select
-    } else {
-        $name
-    }
-    if not ($name | is-empty) {
-        debug $'pm switch: got ($name)'
-        let dir = ((PROJECTS | get $name).dir | path expand)
-        if not ($dir | path exists) {
-            debug $'pm switch: creating dir: ($dir)'
-            mkdir $dir
-        }
-        term switch $name $dir
-    }
-}
-
-export def 'pm toggle-symlink' [] {
+def 'pm toggle-symlink' [] {
     let current_target = (
         ls -ld '~/.pm*'
             | where name =~ '.+/\.pm.yml'
@@ -78,7 +91,7 @@ export def 'pm toggle-symlink' [] {
     ls -ld ~/.pm* | where name =~ '.+/\.pm.yml' | select name target
 }
 
-export def-env 'term switch' [name: string, dir: string] { # -> Void
+def-env 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
     let overlay_use_cmd = $'overlay use .pm.nu as ($name)'
     debug $'term switch: ($name) ($dir)'
@@ -92,25 +105,15 @@ export def-env 'term switch' [name: string, dir: string] { # -> Void
     }
 }
 
-export def 'term list' [] { # -> List<Window>
+def 'term list' [] { # -> List<Window>
     tmux-list-windows
 }
 
-export def 'term clean' [] { # -> Void
-    let active = (tmux display-message -p '#I')
-    term list | get name | uniq -d | par-each { |window|
-        term list | where name == $window | where id != $active | skip 1 | get id | par-each { |id|
-            debug $'tmux kill-window -t ($id)'
-            tmux kill-window -t $id
-        }
-    }
-}
-
-export def 'term delete' [name: string] { # -> Void
+def 'term delete' [name: string] { # -> Void
     tmux kill-window -t (term get $name).id
 }
 
-export def 'term get' [name: string, --no-validate] { # -> Option<Window>
+def 'term get' [name: string, --no-validate] { # -> Option<Window>
     let windows = (term list | where name == $name)
     if ($windows | is-empty) {
         null
@@ -124,7 +127,7 @@ export def 'term get' [name: string, --no-validate] { # -> Option<Window>
     }
 }
 
-export def tmux-list-windows [] {  # -> List<Window>
+def tmux-list-windows [] {  # -> List<Window>
     tmux list-windows -F '#I #W'
         | lines
         | split column ' ' id name
