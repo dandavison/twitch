@@ -9,6 +9,7 @@ def LOG-FILE [] { '/tmp/pm.log' }
 def DEBUG [] { true }
 
 # type Window = {id: Int, name: String}
+# type Project = {name: String dir: String}
 
 export def-env 'pm switch' [name?: string] { # -> Void
     let name = if ($name | is-empty) {
@@ -34,7 +35,20 @@ export def 'pm edit-projects' [] { # -> Void
 }
 
 export def-env 'pm cd' [] {
-    cd (pm read-projects | pm get (term current)).dir
+    cd (pm current).dir
+}
+
+export def 'pm current-name' [] { # -> Option<String>
+    if ('PM_PROJECT_NAME' in $env) {
+        $env.PM_PROJECT_NAME
+    }
+}
+
+export def 'pm current' [] { # -> Option<Project>
+    let name = (pm current-name)
+    if not ($name | is-empty) {
+        pm read-projects | pm get $name
+    }
 }
 
 export def 'pm list' [] { # -> List<String>
@@ -87,11 +101,11 @@ export def 'pm bubble-up' [name: string] {
 }
 
 def 'pm select' [] { # -> Option<String>
-    let current = (term current)
-    pm list | where $it != $current
-        | str collect "\n"
-        | ^fzf --layout reverse --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
-        | str trim -r
+    let name = (pm current-name)
+    pm list | where ($name | is-empty) || $it != $name
+            | str collect "\n"
+            | ^fzf --layout reverse --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
+            | str trim -r
 }
 
 export def 'pm get' [name: string] {
@@ -100,7 +114,7 @@ export def 'pm get' [name: string] {
 
 def 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
-    let overlay_use_cmd = $'overlay use .pm.nu as ($name)'
+    let overlay_use_cmd = $'overlay use .pm.nu as ($name); let-env PM_PROJECT_NAME = "($name)"'
     debug $'term switch: ($name) ($dir)'
     if ($window | is-empty) {
         debug $'term switch: to new window ($name)'
@@ -110,13 +124,6 @@ def 'term switch' [name: string, dir: string] { # -> Void
         tmux send-keys -t $name $overlay_use_cmd 'Enter'
         tmux select-window -t $window.id
     }
-}
-
-export def 'term current' [] { # -> Window
-    let id = (tmux display-message -p '#I' | str trim -r)
-    term list | where id == $id
-              | unwrap-only
-              | get name
 }
 
 export def 'term list' [] { # -> List<Window>
