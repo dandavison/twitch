@@ -4,7 +4,7 @@ export def PM-CONFIG [] {
     }
 }
 
-export def PROJECTS-FILE [] { '~/.pm.json' | path expand }
+export def PROJECTS-FILE [] { '~/.pm.yml' | path expand }
 def LOG-FILE [] { '/tmp/pm.log' }
 def DEBUG [] { true }
 
@@ -79,7 +79,7 @@ alias vscode = edit
 
 export def 'pm read-projects' [] { PROJECTS-FILE | path expand | open }
 
-export def 'pm write-projects' [] { $in | to json | save --raw (PROJECTS-FILE) }
+export def 'pm write-projects' [] { $in | to yaml | save --raw (PROJECTS-FILE) }
 
 export def 'pm bubble-up' [name: string] {
     let projects = $in
@@ -96,23 +96,6 @@ def 'pm select' [] { # -> Option<String>
 
 export def 'pm get' [name: string] {
     $in | where name == $name | unwrap-only
-}
-
-def 'pm toggle-symlink' [] {
-    let current_target = (
-        ls -ld '~/.pm*'
-            | where name =~ '.+/\.pm.yml'
-            | get target
-            | path basename
-    ).0
-    if $current_target == '.pm-real.yml' {
-        ^ln -sf ~/.pm-tests.yml ~/.pm.yml
-    } else if $current_target == '.pm-tests.yml' {
-        ^ln -sf ~/.pm-real.yml ~/.pm.yml
-    } else {
-        error make {msg: 'Unexpected symlink target: ($current_target)'}
-    }
-    ls -ld ~/.pm* | where name =~ '.+/\.pm.yml' | select name target
 }
 
 def 'term switch' [name: string, dir: string] { # -> Void

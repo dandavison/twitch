@@ -50,10 +50,26 @@ def teardown [] {
 }
 
 def activate-test-projects [] {
-    ^ln -sf ~/.pm-tests.yml ~/.pm.yml
+    ^ln -sf ~/.pm/pm-test.yml ~/.pm.yml
 }
 
 def activate-real-projects [] {
-    ^ln -sf ~/.pm-real.yml ~/.pm.yml
+    ^ln -sf ~/.pm/pm.yml ~/.pm.yml
 }
 
+def 'pm toggle-symlink' [] {
+    let current_target = (
+        ls -ld '~/.pm*'
+            | where name =~ '.+/\.pm.yml'
+            | get target
+            | path basename
+    ).0
+    if $current_target == 'pm.yml' {
+        activate-test-projects
+    } else if $current_target == 'pm-test.yml' {
+        activate-real-projects
+    } else {
+        error make {msg: $'Unexpected symlink target: ($current_target)'}
+    }
+    ls -ld ~/.pm.yml | select name target
+}
