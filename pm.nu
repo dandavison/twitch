@@ -1,8 +1,14 @@
-# type Window = {id: Int, name: String}
+export def PM-CONFIG [] {
+    {
+        'PM_FZF_COLOR_THEME': 'light'
+    }
+}
 
 export def PROJECTS-FILE [] { '~/.pm.json' | path expand }
 def LOG-FILE [] { '/tmp/pm.log' }
 def DEBUG [] { true }
+
+# type Window = {id: Int, name: String}
 
 export def-env 'pm switch' [name?: string] { # -> Void
     let name = if ($name | is-empty) {
@@ -84,7 +90,7 @@ def 'pm select' [] { # -> Option<String>
     let current = (term current)
     pm list | where $it != $current
         | str collect "\n"
-        | ^fzf --height='50%' --info=hidden --border=rounded --layout=reverse
+        | ^fzf --layout reverse --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
         | str trim -r
 }
 
