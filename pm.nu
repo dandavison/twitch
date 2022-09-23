@@ -18,12 +18,10 @@ export def-env 'pm switch' [name?: string] { # -> Void
         $name
     }
     if not ($name | is-empty) {
-        debug $'pm switch: got ($name)'
         let projects = (pm read-projects | pm bubble-up $name)
         $projects | pm write-projects
         let dir = (($projects | pm get $name).dir | path expand)
         if not ($dir | path exists) {
-            debug $'pm switch: creating dir: ($dir)'
             mkdir $dir
         }
         term switch $name $dir
@@ -59,7 +57,6 @@ export def 'term clean' [] { # -> Void
     let active = (tmux display-message -p '#I')
     term list | get name | uniq -d | par-each { |window|
         term list | where name == $window | where id != $active | skip 1 | get id | par-each { |id|
-            debug $'tmux kill-window -t ($id)'
             tmux kill-window -t $id
         }
     }
@@ -89,8 +86,6 @@ alias vscode = edit
 #
 # Private
 
-# let-env FZF_DEFAULT_OPTS = '--color=fg:#d0d0d0,bg:#121212,hl:#5f87af --color=fg+:#d0d0d0,bg+:#262626,hl+:#5fd7ff --color=info:#afaf87,prompt:#d7005f,pointer:#af5fff --color=marker:#87ff00,spinner:#af5fff,header:#87afaf'
-
 export def 'pm read-projects' [] { PROJECTS-FILE | path expand | open }
 
 export def 'pm write-projects' [] { $in | to yaml | save --raw (PROJECTS-FILE) }
@@ -115,12 +110,9 @@ export def 'pm get' [name: string] {
 def 'term switch' [name: string, dir: string] { # -> Void
     let window = (term get $name)
     let overlay_use_cmd = $'overlay use .pm.nu as ($name); let-env PM_PROJECT_NAME = "($name)"'
-    debug $'term switch: ($name) ($dir)'
     if ($window | is-empty) {
-        debug $'term switch: to new window ($name)'
         tmux new-window -n $name -c $dir $"nu --execute '($overlay_use_cmd)'"
     } else {
-        debug $'term switch: to existing window ($name)'
         tmux send-keys -t $name $overlay_use_cmd 'Enter'
         tmux select-window -t $window.id
     }
