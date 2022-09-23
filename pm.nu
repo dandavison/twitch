@@ -29,7 +29,7 @@ export def-env 'pm switch' [name?: string] { # -> Void
 }
 
 export def 'pm edit-projects' [] { # -> Void
-    edit --zed (PROJECTS-FILE)
+    edit (PROJECTS-FILE)
 }
 
 export def-env 'pm cd' [] {
@@ -64,7 +64,7 @@ export def 'term clean' [] { # -> Void
 
 # Open a file or directory in VSCode.
 # With no input, select a project file.
-export def edit [path?: string --zed] { # -> Void
+export def edit [path?: string --emacs] { # -> Void
   let path = (if $path == null {
       (pm read-projects | pm get (pm select)).dir
     } else {
@@ -72,8 +72,8 @@ export def edit [path?: string --zed] { # -> Void
     }
   )
   if (not ($path | is-empty)) {
-    if $zed {
-        ^zed $path
+    if $emacs {
+        ^emacsclient -n $path
     } else {
         ^code $path
     }
