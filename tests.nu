@@ -6,13 +6,10 @@ def 'test pm list' [] {
 
 def 'test pm switch' [] {
     pm switch 'A'
-    assert_eq_paths (pwd) (PROJECTS | get 'A').dir
     pm switch 'B'
-    assert_eq_paths (pwd) (PROJECTS | get 'B').dir
 }
 
 def 'test term list' [] {
-    # tmux new-window -n 'window-1'
     let windows = (term list)
     let expected = [{id: 0, name: 'pm-tests'}]
     log $windows

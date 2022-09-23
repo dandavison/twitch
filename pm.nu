@@ -1,3 +1,5 @@
+use /Users/ddavison/src/devenv/nu/stdlib.nu *
+
 export def PM-CONFIG [] {
     {
         'PM_FZF_COLOR_THEME': 'light'
