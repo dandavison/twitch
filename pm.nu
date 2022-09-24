@@ -34,8 +34,13 @@ export def 'pm edit-projects' [] { # -> Void
     edit (PROJECTS-FILE)
 }
 
-export def-env 'pm cd' [] {
-    cd (pm current).dir
+export def-env 'pm cd' [path?: string] {
+    let path = if ($path | is-empty) {
+        (pm current).dir 
+    } else {
+        $path
+    }
+    cd $path
 }
 
 export def 'pm current-name' [] { # -> Option<String>
