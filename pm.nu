@@ -102,7 +102,7 @@ def 'pm select' [] { # -> Option<String>
     let name = (pm current-name)
     pm list | where ($name | is-empty) || $it != $name
             | str collect "\n"
-            | ^fzf --layout reverse --cycle --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
+            | ^fzf --layout reverse --exact --cycle --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
             | str trim -r
 }
 
