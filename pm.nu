@@ -70,15 +70,11 @@ export def 'term clean' [] { # -> Void
 }
 
 # Open a file or directory in VSCode.
-# With no input, select a project file.
+# With no input, select a project and open the editor in that project.
 export def edit [path?: string --emacs] { # -> Void
-  let path = (if $path == null {
-      (pm read-projects | pm get (pm select)).dir
-    } else {
-      $path
-    }
-  )
-  if (not ($path | is-empty)) {
+  if ($path | is-empty) {
+    pm switch $nothing 'edit .'
+  } else {
     if $emacs {
         ^emacsclient -n $path
     } else {
