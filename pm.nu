@@ -13,7 +13,7 @@ def DEBUG [] { true }
 # type Window = {id: Int, name: String}
 # type Project = {name: String dir: String}
 
-export def-env 'pm switch' [name?: string] { # -> Void
+export def-env 'pm switch' [name?, cmd?: string] { # -> Void
     let name = if ($name | is-empty) {
         pm select
     } else {
@@ -26,7 +26,7 @@ export def-env 'pm switch' [name?: string] { # -> Void
         if not ($dir | path exists) {
             mkdir $dir
         }
-        term switch $name $dir
+        term switch $name $dir $cmd
     }
 }
 
@@ -114,13 +114,15 @@ export def 'pm get' [name: string] {
     $in | where name == $name | unwrap-only
 }
 
-def 'term switch' [name: string, dir: string] { # -> Void
+def 'term switch' [name: string, dir: string, cmd?: string] { # -> Void
     let window = (term get $name)
-    let overlay_use_cmd = $'overlay use .pm.nu as ($name); let-env PM_PROJECT_NAME = "($name)"'
+    let overlay_cmd = $'overlay use .pm.nu as ($name); let-env PM_PROJECT_NAME = "($name)"'
+    let cmd = ([$overlay_cmd $cmd] | where -b { |it| not ($it | is-empty) }
+                                   | str join '; ')
     if ($window | is-empty) {
-        tmux new-window -n $name -c $dir $"nu --execute '($overlay_use_cmd)'"
+        tmux new-window -n $name -c $dir $"nu --execute '($cmd)'"
     } else {
-        tmux send-keys -t $name $overlay_use_cmd 'Enter'
+        tmux send-keys -t $name $cmd 'Enter'
         tmux select-window -t $window.id
     }
 }
