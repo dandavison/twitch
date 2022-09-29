@@ -1,4 +1,4 @@
-use /Users/ddavison/src/devenv/nu/stdlib.nu *
+use /Users/ddavison/src/devenv/nushell/stdlib.nu *
 
 export def PM-CONFIG [] {
     {
