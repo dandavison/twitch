@@ -123,7 +123,7 @@ export def 'pm get' [name: string] {
 def 'term switch' [name: string, dir: string, cmd?: string] { # -> Void
     let window = (term get $name)
     let overlay_cmd = $'overlay use .pm.nu as ($name); let-env PM_PROJECT_NAME = "($name)"'
-    let cmd = ([$overlay_cmd $cmd] | where -b { |it| not ($it | is-empty) }
+    let cmd = ([$overlay_cmd $cmd] | where { |it| not ($it | is-empty) }
                                    | str join '; ')
     if ($window | is-empty) {
         tmux new-window -n $name -c $dir $"nu --execute '($cmd)'"
