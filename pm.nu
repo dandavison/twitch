@@ -76,7 +76,7 @@ export def code-with-workspace [path: string] {
 
   # TODO: There might be a race condition here (i.e. might it open $path before workspace is ready?), but it's
   # worked correctly so far. It's unclear how to query for whether the workspace exists and is ready.
-  ^code $path
+  ^code -g $path
 }
 
 # Open a file or directory in VSCode.
