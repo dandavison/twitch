@@ -102,7 +102,7 @@ def 'term switch' [name: string, dir: string, cmd?: string] { # -> Void
     if ($window | is-empty) {
         tmux new-window -n $name -c $dir $"nu --execute '($cmd)'"
     } else {
-        tmux send-keys -t $name $cmd 'Enter'
+        tmux send-keys -t $name 'C-a' 'C-k' $cmd 'Enter'
         tmux select-window -t $window.id
     }
 }
