@@ -69,32 +69,6 @@ export def 'term clean' [] { # -> Void
     }
 }
 
-export def code-with-workspace [path: string] {
-  let dir = if (($path | path type) == 'dir') { $path } else { $path | path dirname }
-  let repo_root = (^git -C $dir rev-parse --show-toplevel | str trim -r)
-  ^code $repo_root # TODO: How to detect whether VSCode workspace already exists?
-
-  # TODO: There might be a race condition here (i.e. might it open $path before workspace is ready?), but it's
-  # worked correctly so far. It's unclear how to query for whether the workspace exists and is ready.
-  ^code -g $path
-}
-
-# Open a file or directory in VSCode.
-# With no input, select a project and open the editor in that project.
-export def edit [path?: string --emacs] { # -> Void
-  if ($path | is-empty) {
-    pm switch $nothing 'edit .'
-  } else {
-    if $emacs {
-        ^emacsclient -n $path
-    } else {
-        code-with-workspace $path
-    }
-  }
-}
-
-
-
 # -------------------------------------------------------------------------------------
 #
 # Private
