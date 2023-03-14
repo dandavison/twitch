@@ -101,7 +101,7 @@ export def edit [path?: string --emacs] { # -> Void
 
 export def 'pm read-projects' [] { PROJECTS-FILE | path expand | open }
 
-export def 'pm write-projects' [] { $in | to yaml | save --raw (PROJECTS-FILE) }
+export def 'pm write-projects' [] { $in | to yaml | save --force --raw (PROJECTS-FILE) }
 
 export def 'pm bubble-up' [name: string] {
     let projects = $in
@@ -110,7 +110,7 @@ export def 'pm bubble-up' [name: string] {
 
 def 'pm select' [] { # -> Option<String>
     let name = (pm current-name)
-    pm list | where ($name | is-empty) || $it != $name
+    pm list | where (($name | is-empty) or $it != $name)
             | str collect "\n"
             | ^fzf --layout reverse --exact --cycle --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
             | str trim -r
