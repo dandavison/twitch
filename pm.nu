@@ -85,7 +85,7 @@ export def 'pm bubble-up' [name: string] {
 def 'pm select' [] { # -> Option<String>
     let name = (pm current-name)
     pm list | where (($name | is-empty) or $it != $name)
-            | str collect "\n"
+            | str join "\n"
             | ^fzf --layout reverse --exact --cycle --height 50% --info hidden --prompt='  ' --border rounded --color (PM-CONFIG).PM_FZF_COLOR_THEME
             | str trim -r
 }
