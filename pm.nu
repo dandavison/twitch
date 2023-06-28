@@ -1,4 +1,4 @@
-use /Users/dan/src/devenv/nushell/stdlib.nu *
+use /Users/dan/src/nushell-config/stdlib.nu *
 
 export def PM-CONFIG [] {
     {
@@ -100,9 +100,8 @@ def 'term switch' [name: string, dir: string, cmd?: string] { # -> Void
     let cmd = ([$overlay_cmd $cmd] | where { |it| not ($it | is-empty) }
                                    | str join '; ')
     if ($window | is-empty) {
-        tmux new-window -n $name -c $dir $"nu --execute '($cmd)'"
+        tmux new-window -n $name -c $dir
     } else {
-        tmux send-keys -t $name 'C-a' 'C-k' $cmd 'Enter'
         tmux select-window -t $window.id
     }
 }
