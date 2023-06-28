@@ -96,12 +96,16 @@ export def 'pm get' [name: string] {
 
 def 'term switch' [name: string, dir: string, cmd?: string] { # -> Void
     let window = (term get $name)
-    let overlay_cmd = $'overlay use .pm.nu as ($name); let-env PM_PROJECT_NAME = "($name)"'
-    let cmd = ([$overlay_cmd $cmd] | where { |it| not ($it | is-empty) }
-                                   | str join '; ')
     if ($window | is-empty) {
-        tmux new-window -n $name -c $dir
+        if ($cmd | is-empty) {
+            tmux new-window -n $name -c $dir
+        } else {
+            tmux new-window -n $name -c $dir $"$cmd"
+        }
     } else {
+        if not ($cmd | is-empty) {
+            tmux send-keys -t $name 'C-a' 'C-k' $cmd 'Enter'
+        }
         tmux select-window -t $window.id
     }
 }
