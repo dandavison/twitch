@@ -140,7 +140,7 @@ def tmux-list-windows [] {  # -> List<Window>
 
 
 def debug [msg: string] {
-    if DEBUG {
+    if (DEBUG) {
         let msg = $"($msg)\n"
         print $msg
         $msg | save --append (LOG-FILE)
