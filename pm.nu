@@ -8,6 +8,7 @@ export def PM-CONFIG [] {
 
 export def PROJECTS-FILE [] { '~/.pm.yml' | path expand }
 def LOG-FILE [] { '/tmp/pm.log' }
+def ENV-FILE [] { '/tmp/pm.env' }
 def DEBUG [] { true }
 
 # type Window = {id: Int, name: String}
@@ -96,16 +97,16 @@ export def 'pm get' [name: string] {
 
 def 'term switch' [name: string, dir: string, cmd?: string] { # -> Void
     let window = (term get $name)
+    $"export PM_PROJECT_NAME='($name)' PM_PROJECT_DIR='($dir)'" | save --force (ENV-FILE)
+    let source_cmd = $"source (ENV-FILE)"
+    let cmd = ([$source_cmd $cmd] | where { |it| not ($it | is-empty) }
+                                  | str join '; ')
+
     if ($window | is-empty) {
-        if ($cmd | is-empty) {
-            tmux new-window -n $name -c $dir
-        } else {
-            tmux new-window -n $name -c $dir $"$cmd"
-        }
+        # shell config must source ENV-FILE
+        tmux new-window -n $name -c $dir
     } else {
-        if not ($cmd | is-empty) {
-            tmux send-keys -t $name 'C-a' 'C-k' $cmd 'Enter'
-        }
+        tmux send-keys -t $name 'C-a' 'C-k' $"($cmd)" 'Enter'
         tmux select-window -t $window.id
     }
 }
