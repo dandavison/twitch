@@ -1,3 +1,5 @@
+**This project is archived. It evolved into https://github.com/dandavison/wormhole**
+
 `twitch` is a tool for working on multiple terminal projects concurrently.
 
 The basic idea is that one project corresponds to one tmux window.
